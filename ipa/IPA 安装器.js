@@ -6,7 +6,7 @@ IPA 文件安装器
 */
 
 var port_number = 8080
-var plist_url = "itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/O-Yang/jsbox-/main/ipa%E5%AE%89%E8%A3%85%E5%99%A8/plist_url.plist"
+var plist_url = "itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/O-Yang/jsbox/main/ipa/plist_url.plist"
 
 
 $app.strings = {
