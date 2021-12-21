@@ -1,15 +1,32 @@
-
 /*
 IPA 文件安装器
 - 支持文件分享安装
 - 支持主程序运行选择文件安装
 - 安装完成后请返回运行界面选择后续操作
-
-联系作者：https://t.me/O_Yang
 */
 
 var port_number = 8080
-var plist_url = "itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/O-Yang/ipa/main/plist_url.plist"
+var plist_url = "itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/O-Yang/jsbox-/main/ipa%E5%AE%89%E8%A3%85%E5%99%A8/plist_url.plist"
+
+
+$app.strings = {
+  "en": {
+    "starterror": "Not support running in this way",
+    "ftypeerror": " is not ipa file",
+    "installtitle": "Installing...",
+    "installmsg": "\n\nYou can check on Homescreen.\nPlease tap \"Done\" button after finished",
+    "inerrtitle": "IPA file import error",
+    "inerrmsg": "Please rerun the script"
+  },
+  "zh-Hans": {
+    "starterror": "不支持此方式运行！",
+    "ftypeerror": " 非 ipa 文件！",
+    "installtitle": "正在安装…",
+    "installmsg": "\n\n可前往桌面查看安装进度\n完成后请点击\"完成\"按钮",
+    "inerrtitle": "IPA文件导入失败",
+    "inerrmsg": "请重新运行此脚本"
+  }
+}
 
 // 从应用内启动
 if ($app.env == $env.app) {
@@ -25,7 +42,7 @@ else if ($app.env == $env.action) {
 }
 
 else {
-  $ui.error("不支持此方式运行！")
+  $ui.error($l10n("starterror"))
   delayClose(2)
 }
 
@@ -35,7 +52,7 @@ function startServer(port) {
     port: port,
     path: "",
     handler: function(result) {
-      var url = result.url
+      console.info(result.url)
     }
   })
 }
@@ -44,7 +61,7 @@ function fileCheck(data) {
   if (data && data.fileName) {
     var fileName = data.fileName;
     if (fileName.indexOf(".ipa") == -1) {
-      $ui.error(fileName + "非 ipa 文件！")
+      $ui.error(fileName + $l10n("ftypeerror"))
       delayClose(2)
     } else {
       install(fileName, data);
@@ -59,13 +76,18 @@ function install(fileName, file) {
   })
   if (result) {
     startServer(port_number)
+    $location.startUpdates({
+      handler: function(resp) {
+        console.info(resp.lat + " " + resp.lng + " " + resp.alt)
+      }
+    })
     var preResult = $app.openURL(plist_url);
     if (preResult) {
       $ui.alert({
-        title: "正在安装…",
-        message: "\n" + fileName + "\n\n请返回桌面查看进度\n\n安装完成后请返回\n\n点击\"安装完成\"按钮",
+        title: $l10n("installtitle"),
+        message: "\n" + fileName + $l10n("installmsg"),
         actions: [{
-          title: "取消",
+          title: "终止",
           style: "Cancel",
           handler: function() {
             $http.stopServer()
@@ -74,7 +96,7 @@ function install(fileName, file) {
           }
         },
         {
-          title: "安装完成",
+          title: "完成",
           handler: function() {
             $http.stopServer()
             $file.delete("app.ipa")
@@ -84,11 +106,11 @@ function install(fileName, file) {
       })
     } else {
       $ui.alert({
-        title: "安装启动失败",
-        message: "请重新运行此脚本",
-        actions: [{
+        title: "Open itms-services scheme failed",
+        message: "Please rerun the script or restart device",
+        actions: [
+        {
           title: "OK",
-          style: "Cancel",
           handler: function() {
             delayClose(0.2)
           }
@@ -97,8 +119,8 @@ function install(fileName, file) {
     }
   } else {
     $ui.alert({
-      title: "导入失败",
-      message: "请重新运行此脚本",
+      title: $l10n("inerrtitle"),
+      message: $l10n("inerrmsg"),
       actions: [{
         title: "OK",
         style: "Cancel",
@@ -111,6 +133,7 @@ function install(fileName, file) {
 }
 
 function delayClose(time) {
+    $location.stopUpdates()
     $thread.main({
       delay: time,
       handler: function() {
@@ -121,6 +144,3 @@ function delayClose(time) {
       }
     })
 }
-
-
-
